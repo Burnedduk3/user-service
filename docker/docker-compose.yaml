@@ -1,0 +1,13 @@
+services:
+  postgres:
+    image: "postgres:17.6"
+    environment:
+      POSTGRES_PASSWORD: admin
+      POSTGRES_USER: user-service
+      POSTGRES_DB: user-service
+    ports:
+      - "5432:5432"
+  rabbitmq:
+    image: "rabbitmq:4.1.4"
+    ports:
+      - "5672:5672"
