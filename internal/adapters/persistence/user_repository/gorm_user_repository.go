@@ -87,52 +87,6 @@ func (r *GormUserRepository) GetByEmail(ctx context.Context, email string) (*ent
 	return r.toEntity(&model), nil
 }
 
-// Update implements ports.UserRepository
-func (r *GormUserRepository) Update(ctx context.Context, user *entities.User) (*entities.User, error) {
-	// First check if user exists
-	var existingModel UserModel
-	err := r.db.WithContext(ctx).Where("id = ?", user.ID).First(&existingModel).Error
-	if err != nil {
-		return nil, r.handleError(err)
-	}
-
-	// Convert entity to model for update
-	updateModel := r.toModel(user)
-
-	// Update the user
-	err = r.db.WithContext(ctx).Model(&existingModel).Updates(updateModel).Error
-	if err != nil {
-		return nil, r.handleError(err)
-	}
-
-	// Fetch the updated user to return
-	var updatedModel UserModel
-	err = r.db.WithContext(ctx).Where("id = ?", user.ID).First(&updatedModel).Error
-	if err != nil {
-		return nil, r.handleError(err)
-	}
-
-	return r.toEntity(&updatedModel), nil
-}
-
-// Delete implements ports.UserRepository
-func (r *GormUserRepository) Delete(ctx context.Context, id uint) error {
-	// First check if user exists
-	var model UserModel
-	err := r.db.WithContext(ctx).Where("id = ?", id).First(&model).Error
-	if err != nil {
-		return r.handleError(err)
-	}
-
-	// Perform soft delete
-	err = r.db.WithContext(ctx).Delete(&model).Error
-	if err != nil {
-		return r.handleError(err)
-	}
-
-	return nil
-}
-
 // ExistsByEmail implements ports.UserRepository
 func (r *GormUserRepository) ExistsByEmail(ctx context.Context, email string) (bool, error) {
 	var count int64

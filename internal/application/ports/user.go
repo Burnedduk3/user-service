@@ -16,12 +16,6 @@ type UserRepository interface {
 	// GetByEmail retrieves a user by their email (useful for login)
 	GetByEmail(ctx context.Context, email string) (*entities.User, error)
 
-	// Update an existing user
-	Update(ctx context.Context, user *entities.User) (*entities.User, error)
-
-	// Delete a user (soft delete recommended)
-	Delete(ctx context.Context, id uint) error
-
 	// ExistsByEmail checks if a user with the given email exists
 	ExistsByEmail(ctx context.Context, email string) (bool, error)
 

@@ -5,7 +5,6 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -36,12 +35,6 @@ func init() {
 func runServer(cmd *cobra.Command, args []string) error {
 	// Initialize logging
 	log := logger.New(env)
-
-	defer func() {
-		if err := log.Sync(); err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to sync logging: %v\n", err)
-		}
-	}()
 
 	log.Info("Starting Identity Service...")
 
