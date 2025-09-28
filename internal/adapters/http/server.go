@@ -101,7 +101,6 @@ func (s *Server) setupRoutes() {
 		users.POST("", userHandler.CreateUser)
 		users.GET("", userHandler.ListUsers)
 		users.GET("/:id", userHandler.GetUser)
-		users.PUT("/:id", userHandler.UpdateUser)
 		users.GET("/email/:email", userHandler.GetUserByEmail)
 	}
 	s.logRegisteredRoutes()

@@ -18,7 +18,6 @@ type UserUseCases interface {
 	CreateUser(ctx context.Context, request *dto.CreateUserRequestDTO) (*dto.UserResponseDTO, error)
 	GetUserByID(ctx context.Context, id uint) (*dto.UserResponseDTO, error)
 	GetUserByEmail(ctx context.Context, email string) (*dto.UserResponseDTO, error)
-	UpdateUser(ctx context.Context, id uint, request *dto.UpdateUserRequestDTO) (*dto.UserResponseDTO, error)
 	ListUsers(ctx context.Context, page, pageSize int) (*dto.UserListResponseDTO, error)
 }
 
@@ -98,33 +97,6 @@ func (uc *userUseCasesImpl) GetUserByEmail(ctx context.Context, email string) (*
 	}
 	uc.logger.Info("GetUserByEmail success", "user_id", user.ID)
 	return dto.UserToResponseDTO(user), nil
-}
-
-// UpdateUser updates an existing user
-func (uc *userUseCasesImpl) UpdateUser(ctx context.Context, id uint, request *dto.UpdateUserRequestDTO) (*dto.UserResponseDTO, error) {
-	uc.logger.Info("UpdateUser use case called", "user_id", id)
-
-	existingUser, err := uc.userRepo.GetByID(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-
-	if request.Phone != "" {
-		existingUser.Phone = request.Phone
-	}
-
-	if request.LastName != "" {
-		existingUser.LastName = request.LastName
-	}
-
-	if request.FirstName != "" {
-		existingUser.FirstName = request.FirstName
-	}
-	uc.userRepo.Update(ctx, existingUser)
-
-	uc.logger.Info("UpdateUser success", "user_id", id)
-
-	return dto.UserToResponseDTO(existingUser), nil
 }
 
 // ListUsers retrieves a paginated list of users
