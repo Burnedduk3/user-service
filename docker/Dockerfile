@@ -1,4 +1,4 @@
-FROM alpine:3.14
+FROM alpine:3.22
 
 RUN mkdir -p /etc/user-service
 COPY configs/config-docker.yaml /etc/user-service/config.yaml
