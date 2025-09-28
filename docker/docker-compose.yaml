@@ -17,7 +17,7 @@ services:
       - "5432:5432"
   rabbitmq:
     image: "rabbitmq:4.1.4"
-    container_name: rabbitmq-user
+    container_name: rabbitmq
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 30s
