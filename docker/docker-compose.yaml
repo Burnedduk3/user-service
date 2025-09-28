@@ -3,7 +3,7 @@ name: user-service
 services:
   postgres:
     image: "postgres:17.6"
-    container_name: postgres
+    container_name: postgres-user
     healthcheck:
       test: [ "CMD", "pg_isready", "-U", "user-service"]
       interval: 10s
@@ -17,7 +17,7 @@ services:
       - "5432:5432"
   rabbitmq:
     image: "rabbitmq:4.1.4"
-    container_name: rabbitmq
+    container_name: rabbitmq-user
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 30s
