@@ -59,6 +59,11 @@ var (
 		Code:    "FAILED_TO_CREATE_USER",
 		Message: "failed to create user",
 	}
+
+	ErrFailedToListUsers = &DomainError{
+		Code:    "FAILED_TO_LIST_USERS",
+		Message: "failed to list users",
+	}
 )
 
 // Helper functions to create specific errors

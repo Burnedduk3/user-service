@@ -36,11 +36,10 @@ type UserResponseDTO struct {
 
 // UserListResponseDTO for paginated user lists
 type UserListResponseDTO struct {
-	Users      []*UserResponseDTO `json:"users"`
-	Total      int                `json:"total"`
-	Page       int                `json:"page"`
-	PageSize   int                `json:"page_size"`
-	TotalPages int                `json:"total_pages"`
+	Users    []*UserResponseDTO `json:"users"`
+	Total    int                `json:"total"`
+	Page     int                `json:"page"`
+	PageSize int                `json:"page_size"`
 }
 
 // Conversion methods

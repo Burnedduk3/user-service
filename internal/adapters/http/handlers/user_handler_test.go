@@ -306,11 +306,10 @@ func TestUserHandler_ListUsers_Success(t *testing.T) {
 	}
 
 	expectedResponse := &dto.UserListResponseDTO{
-		Users:      expectedUsers,
-		Total:      2,
-		Page:       1,
-		PageSize:   10,
-		TotalPages: 1,
+		Users:    expectedUsers,
+		Total:    2,
+		Page:     1,
+		PageSize: 10,
 	}
 
 	mockUseCases.On("ListUsers", mock.Anything, 1, 10).Return(expectedResponse, nil)
@@ -343,11 +342,10 @@ func TestUserHandler_ListUsers_WithPagination(t *testing.T) {
 	handler, mockUseCases := setupTestHandler()
 
 	expectedResponse := &dto.UserListResponseDTO{
-		Users:      []*dto.UserResponseDTO{},
-		Total:      0,
-		Page:       2,
-		PageSize:   5,
-		TotalPages: 1,
+		Users:    []*dto.UserResponseDTO{},
+		Total:    0,
+		Page:     2,
+		PageSize: 5,
 	}
 
 	mockUseCases.On("ListUsers", mock.Anything, 2, 5).Return(expectedResponse, nil)

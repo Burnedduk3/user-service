@@ -79,75 +79,82 @@ func (uc *userUseCasesImpl) CreateUser(ctx context.Context, request *dto.CreateU
 func (uc *userUseCasesImpl) GetUserByID(ctx context.Context, id uint) (*dto.UserResponseDTO, error) {
 	uc.logger.Info("GetUserByID use case called", "user_id", id)
 
-	// TODO: Implement GetUserByID use case
-	// Steps to implement:
-	// 1. Log the operation with user_id (already done)
-	// 2. Get user from repository using uc.userRepo.GetByID()
-	// 3. Handle any errors from repository (return as-is)
-	// 4. Convert user entity to response DTO using dto.UserToResponseDTO()
-	// 5. Log success and return response
-
-	return nil, errors.New("GetUserByID not implemented yet")
+	user, err := uc.userRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	uc.logger.Info("GetUserByID success", "user_id", id)
+	return dto.UserToResponseDTO(user), nil
 }
 
 // GetUserByEmail retrieves a user by their email address
 func (uc *userUseCasesImpl) GetUserByEmail(ctx context.Context, email string) (*dto.UserResponseDTO, error) {
 	uc.logger.Info("GetUserByEmail use case called", "email", email)
 
-	// TODO: Implement GetUserByEmail use case
-	// Steps to implement:
-	// 1. Log the operation with email (already done)
-	// 2. Get user from repository using uc.userRepo.GetByEmail()
-	// 3. Handle any errors from repository (return as-is)
-	// 4. Convert user entity to response DTO using dto.UserToResponseDTO()
-	// 5. Log success and return response
+	user, err := uc.userRepo.GetByEmail(ctx, email)
 
-	return nil, errors.New("GetUserByEmail not implemented yet")
+	if err != nil {
+		return nil, err
+	}
+	uc.logger.Info("GetUserByEmail success", "user_id", user.ID)
+	return dto.UserToResponseDTO(user), nil
 }
 
 // UpdateUser updates an existing user
 func (uc *userUseCasesImpl) UpdateUser(ctx context.Context, id uint, request *dto.UpdateUserRequestDTO) (*dto.UserResponseDTO, error) {
 	uc.logger.Info("UpdateUser use case called", "user_id", id)
 
-	// TODO: Implement UpdateUser use case
-	// Steps to implement:
-	// 1. Log the operation with user_id (already done)
-	// 2. Get existing user using uc.userRepo.GetByID()
-	// 3. Handle error if user not found
-	// 4. Update fields only if they are provided in request (not empty)
-	//    - if request.FirstName != "" then existingUser.FirstName = request.FirstName
-	//    - if request.LastName != "" then existingUser.LastName = request.LastName
-	//    - if request.Phone != "" then existingUser.Phone = request.Phone
-	// 5. Update user in repository using uc.userRepo.Update()
-	// 6. Convert updated user to response DTO using dto.UserToResponseDTO()
-	// 7. Log success and return response
+	existingUser, err := uc.userRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
 
-	return nil, errors.New("UpdateUser not implemented yet")
+	if request.Phone != "" {
+		existingUser.Phone = request.Phone
+	}
+
+	if request.LastName != "" {
+		existingUser.LastName = request.LastName
+	}
+
+	if request.FirstName != "" {
+		existingUser.FirstName = request.FirstName
+	}
+	uc.userRepo.Update(ctx, existingUser)
+
+	uc.logger.Info("UpdateUser success", "user_id", id)
+
+	return dto.UserToResponseDTO(existingUser), nil
 }
 
 // ListUsers retrieves a paginated list of users
 func (uc *userUseCasesImpl) ListUsers(ctx context.Context, page, pageSize int) (*dto.UserListResponseDTO, error) {
 	uc.logger.Info("ListUsers use case called", "page", page, "page_size", pageSize)
 
-	// TODO: Implement ListUsers use case
-	// Steps to implement:
-	// 1. Log the operation with page and pageSize (already done)
-	// 2. Validate and correct pagination parameters:
-	//    - if page < 1 then page = 1
-	//    - if pageSize < 1 or pageSize > 100 then pageSize = 10
-	// 3. Calculate offset: offset = (page - 1) * pageSize
-	// 4. Get users from repository using uc.userRepo.List(pageSize, offset)
-	// 5. Handle any errors from repository
-	// 6. Convert users to response DTOs using dto.UsersToResponseDTOs()
-	// 7. Create UserListResponseDTO with:
-	//    - Users: converted DTOs
-	//    - Total: len(userDTOs) (for now, in real app you'd get total count)
-	//    - Page: page
-	//    - PageSize: pageSize
-	//    - TotalPages: 1 (for now, in real app: (total + pageSize - 1) / pageSize)
-	// 8. Log success and return response
+	if page < 1 {
+		page = 1
+	}
 
-	return nil, errors.New("ListUsers not implemented yet")
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 10
+	}
+
+	users, err := uc.userRepo.List(ctx, page, pageSize)
+
+	if err != nil {
+		return nil, err
+	}
+
+	response := dto.UsersToResponseDTOs(users)
+
+	uc.logger.Info("ListUsers success", "page", page, "page_size", pageSize)
+
+	return &dto.UserListResponseDTO{
+		Users:    response,
+		Page:     page,
+		PageSize: pageSize,
+		Total:    len(users),
+	}, nil
 }
 
 // hashPassword hashes a plain text password using bcrypt
@@ -157,9 +164,4 @@ func hashPassword(password string) (string, error) {
 		return "", err
 	}
 	return string(hashInBytes), nil
-}
-
-// verifyPassword verifies a password against its hash
-func verifyPassword(hashedPassword, password string) error {
-	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 }

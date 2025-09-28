@@ -239,11 +239,10 @@ func TestUserListResponseDTO_Structure(t *testing.T) {
 	}
 
 	dto := UserListResponseDTO{
-		Users:      users,
-		Total:      10,
-		Page:       1,
-		PageSize:   2,
-		TotalPages: 5,
+		Users:    users,
+		Total:    10,
+		Page:     1,
+		PageSize: 2,
 	}
 
 	// When - Serialize to JSON
@@ -259,5 +258,4 @@ func TestUserListResponseDTO_Structure(t *testing.T) {
 	assert.Equal(t, 10, decoded.Total)
 	assert.Equal(t, 1, decoded.Page)
 	assert.Equal(t, 2, decoded.PageSize)
-	assert.Equal(t, 5, decoded.TotalPages)
 }

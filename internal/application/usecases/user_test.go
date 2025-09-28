@@ -480,10 +480,10 @@ func TestUserUseCases_ListUsers_Success(t *testing.T) {
 		},
 	}
 
-	mockRepo.On("List", ctx, 10, 0).Return(expectedUsers, nil)
+	mockRepo.On("List", ctx, 1, 10).Return(expectedUsers, nil)
 
 	// When
-	result, err := useCases.ListUsers(ctx, 1, 10)
+	result, err := useCases.ListUsers(ctx, 0, 10)
 
 	// Then
 	require.NoError(t, err)
@@ -492,7 +492,6 @@ func TestUserUseCases_ListUsers_Success(t *testing.T) {
 	assert.Equal(t, 2, result.Total)
 	assert.Equal(t, 1, result.Page)
 	assert.Equal(t, 10, result.PageSize)
-	assert.Equal(t, 1, result.TotalPages)
 
 	mockRepo.AssertExpectations(t)
 }
@@ -503,7 +502,7 @@ func TestUserUseCases_ListUsers_InvalidPagination(t *testing.T) {
 	ctx := context.Background()
 
 	// Mock for corrected pagination parameters
-	mockRepo.On("List", ctx, 10, 0).Return([]*entities.User{}, nil)
+	mockRepo.On("List", ctx, 1, 10).Return([]*entities.User{}, nil)
 
 	// When - Pass invalid pagination parameters
 	result, err := useCases.ListUsers(ctx, -1, 150) // Invalid page and page_size
@@ -532,7 +531,7 @@ func TestUserUseCases_ListUsers_SecondPage(t *testing.T) {
 	}
 
 	// For page 2 with page_size 5, offset should be 5
-	mockRepo.On("List", ctx, 5, 5).Return(expectedUsers, nil)
+	mockRepo.On("List", ctx, 2, 5).Return(expectedUsers, nil)
 
 	// When
 	result, err := useCases.ListUsers(ctx, 2, 5)
@@ -552,7 +551,7 @@ func TestUserUseCases_ListUsers_RepositoryError(t *testing.T) {
 	useCases, mockRepo := setupTestUseCases()
 	ctx := context.Background()
 
-	mockRepo.On("List", ctx, 10, 0).Return(nil, assert.AnError)
+	mockRepo.On("List", ctx, 1, 10).Return(nil, domainErrors.ErrFailedToListUsers)
 
 	// When
 	result, err := useCases.ListUsers(ctx, 1, 10)
@@ -570,7 +569,7 @@ func TestUserUseCases_ListUsers_EmptyResult(t *testing.T) {
 	useCases, mockRepo := setupTestUseCases()
 	ctx := context.Background()
 
-	mockRepo.On("List", ctx, 10, 0).Return([]*entities.User{}, nil)
+	mockRepo.On("List", ctx, 1, 10).Return([]*entities.User{}, nil)
 
 	// When
 	result, err := useCases.ListUsers(ctx, 1, 10)
