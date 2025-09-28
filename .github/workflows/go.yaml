@@ -84,11 +84,12 @@ jobs:
       - name: Tag and push image to ECR
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: user-service  # Change to your ECR repository name
+          ECR_REPOSITORY: user-service
           IMAGE_TAG: ${{ env.MAYOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ github.run_number }}
+          ENVIRONMENT: develop
         run: |
-          docker tag user-service:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker tag user-service:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker tag user-service:$IMAGE_TAG $ECR_REGISTRY/$ENVIRONMENT/$ECR_REPOSITORY:$IMAGE_TAG
+          docker tag user-service:$IMAGE_TAG $ECR_REGISTRY/$ENVIRONMENT/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ENVIRONMENT/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ENVIRONMENT/$ECR_REPOSITORY:latest
 
