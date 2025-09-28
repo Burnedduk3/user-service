@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"user-service/internal/adapters/http/handlers"
 	"user-service/internal/adapters/http/middlewares/logging"
+	"user-service/internal/adapters/persistence/user_repository"
+	"user-service/internal/application/usecases"
 	"user-service/internal/config"
 	"user-service/internal/infrastructure"
 	"user-service/pkg/logger"
@@ -68,7 +70,7 @@ func (s *Server) setupMiddleware() {
 		AllowMethods: s.config.Server.CORS.AllowMethods,
 		AllowHeaders: s.config.Server.CORS.AllowHeaders,
 	}))
-	
+
 	// Request timeout middleware
 	s.echo.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
 		Timeout: s.config.Server.ReadTimeout,
@@ -78,7 +80,11 @@ func (s *Server) setupMiddleware() {
 func (s *Server) setupRoutes() {
 	// Health check handlers with database connections
 	healthHandler := handlers.NewHealthHandler(s.logger, s.connections) // Updated
+	userRepo := user_repository.NewGormUserRepository(s.connections.GetGormDB())
 
+	userUseCases := usecases.NewUserUseCases(userRepo, s.logger)
+
+	userHandler := handlers.NewUserHandler(userUseCases, s.logger)
 	// API v1 routes
 	v1 := s.echo.Group("/api/v1")
 
@@ -89,6 +95,26 @@ func (s *Server) setupRoutes() {
 
 	// Metrics endpoint
 	v1.GET("/metrics", healthHandler.Metrics)
+
+	users := v1.Group("/users")
+	{
+		users.POST("", userHandler.CreateUser)
+		users.GET("", userHandler.ListUsers)
+		users.GET("/:id", userHandler.GetUser)
+		users.PUT("/:id", userHandler.UpdateUser)
+		users.GET("/email/:email", userHandler.GetUserByEmail)
+	}
+	s.logRegisteredRoutes()
+}
+
+func (s *Server) logRegisteredRoutes() {
+	s.logger.Info("HTTP routes registered:")
+	for _, route := range s.echo.Routes() {
+		s.logger.Info("Route registered",
+			"method", route.Method,
+			"path", route.Path,
+			"name", route.Name)
+	}
 }
 
 func (s *Server) Start() error {

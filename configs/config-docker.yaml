@@ -19,10 +19,6 @@ database:
   database: "user-service"
   ssl_mode: "disable"
 
-rabbitmq:
-  host: 192.168.2.61
-  port: 5672
-
 security:
   rate_limit_rps: 100
   rate_limit_burst: 200
