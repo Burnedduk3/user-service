@@ -4,9 +4,13 @@ package usecases
 import (
 	"context"
 	"errors"
+	"net/mail"
 	"user-service/internal/application/dto"
 	"user-service/internal/application/ports"
+	userErrors "user-service/internal/domain/errors"
 	"user-service/pkg/logger"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 // UserUseCases defines the interface for user business operations
@@ -34,19 +38,41 @@ func NewUserUseCases(userRepo ports.UserRepository, log logger.Logger) UserUseCa
 
 func (uc *userUseCasesImpl) CreateUser(ctx context.Context, request *dto.CreateUserRequestDTO) (*dto.UserResponseDTO, error) {
 	uc.logger.Info("CreateUser use case called", "email", request.Email)
+	if _, err := mail.ParseAddress(request.Email); err != nil {
+		return nil, userErrors.ErrInvalidUserEmail
+	}
 
-	// TODO: Implement CreateUser use case
-	// Steps to implement:
-	// 1. Log the operation with email (already done)
-	// 2. Check if user already exists using uc.userRepo.ExistsByEmail()
-	// 3. If exists, return domainErrors.ErrUserAlreadyExists
-	// 4. Convert DTO to domain entity using request.ToEntity()
-	// 5. Hash the password using hashPassword() helper function
-	// 6. Create user in repository using uc.userRepo.Create()
-	// 7. Convert created user to response DTO using dto.UserToResponseDTO()
-	// 8. Log success and return response
+	if _, err := uc.userRepo.ExistsByEmail(ctx, request.Email); err != nil {
+		return nil, userErrors.ErrUserAlreadyExists
+	}
 
-	return nil, errors.New("CreateUser not implemented yet")
+	domainEntity, err := request.ToEntity()
+
+	if err != nil {
+		return nil, err
+	}
+
+	domainEntity.Password, err = hashPassword(domainEntity.Password)
+
+	if err != nil {
+		return nil, err
+	}
+
+	createUser, err := uc.userRepo.Create(ctx, domainEntity)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, userErrors.ErrFailedToCheckUserExistance):
+			return nil, userErrors.ErrFailedToCheckUserExistance
+		default:
+			return nil, userErrors.ErrFailedToCreateUser
+
+		}
+	}
+
+	uc.logger.Info("CreateUser success", "email", request.Email)
+
+	return dto.UserToResponseDTO(createUser), nil
 }
 
 // GetUserByID retrieves a user by their ID
@@ -124,18 +150,16 @@ func (uc *userUseCasesImpl) ListUsers(ctx context.Context, page, pageSize int) (
 	return nil, errors.New("ListUsers not implemented yet")
 }
 
-// Helper functions to implement
-
-// TODO: Implement hashPassword function
 // hashPassword hashes a plain text password using bcrypt
-// func hashPassword(password string) (string, error) {
-//     // Use bcrypt.GenerateFromPassword() with bcrypt.DefaultCost
-//     // Return the hashed password as string
-// }
+func hashPassword(password string) (string, error) {
+	hashInBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hashInBytes), nil
+}
 
-// TODO: Implement verifyPassword function (for future use)
 // verifyPassword verifies a password against its hash
-// func verifyPassword(hashedPassword, password string) error {
-//     // Use bcrypt.CompareHashAndPassword()
-//     // Return error if passwords don't match
-// }
+func verifyPassword(hashedPassword, password string) error {
+	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+}

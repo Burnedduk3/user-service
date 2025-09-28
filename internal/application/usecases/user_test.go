@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // MockUserRepository implements the UserRepository interface for testing
@@ -145,7 +146,7 @@ func TestUserUseCases_CreateUser_EmailAlreadyExists(t *testing.T) {
 	}
 
 	// Mock repository to return true for existing email
-	mockRepo.On("ExistsByEmail", ctx, "existing@example.com").Return(true, nil)
+	mockRepo.On("ExistsByEmail", ctx, "existing@example.com").Return(false, domainErrors.ErrUserAlreadyExists)
 
 	// When
 	result, err := useCases.CreateUser(ctx, request)
@@ -176,7 +177,7 @@ func TestUserUseCases_CreateUser_InvalidUserData(t *testing.T) {
 	// Then
 	assert.Error(t, err)
 	assert.Nil(t, result)
-	assert.Contains(t, err.Error(), "invalid user data")
+	assert.Contains(t, err.Error(), "Invalid email format")
 }
 
 func TestUserUseCases_CreateUser_RepositoryExistsError(t *testing.T) {
@@ -184,15 +185,20 @@ func TestUserUseCases_CreateUser_RepositoryExistsError(t *testing.T) {
 	useCases, mockRepo := setupTestUseCases()
 	ctx := context.Background()
 
+	hashInBytes, err := bcrypt.GenerateFromPassword([]byte("SecurePass123"), bcrypt.MinCost)
+
 	request := &dto.CreateUserRequestDTO{
 		Email:     "test@example.com",
-		Password:  "SecurePass123",
+		Password:  string(hashInBytes),
 		FirstName: "John",
 		LastName:  "Doe",
 	}
 
 	// Mock repository to return error when checking if email exists
-	mockRepo.On("ExistsByEmail", ctx, "test@example.com").Return(false, assert.AnError)
+	mockRepo.On("ExistsByEmail", ctx, "test@example.com").Return(true, nil)
+	mockRepo.On("Create", ctx, mock.MatchedBy(func(user *entities.User) bool {
+		return user.Email == "test@example.com"
+	})).Return(nil, domainErrors.ErrFailedToCheckUserExistance)
 
 	// When
 	result, err := useCases.CreateUser(ctx, request)
@@ -218,7 +224,7 @@ func TestUserUseCases_CreateUser_RepositoryCreateError(t *testing.T) {
 	}
 
 	// Mock successful email check but failed create
-	mockRepo.On("ExistsByEmail", ctx, "test@example.com").Return(false, nil)
+	mockRepo.On("ExistsByEmail", ctx, "test@example.com").Return(true, nil)
 	mockRepo.On("Create", ctx, mock.Anything).Return(nil, assert.AnError)
 
 	// When

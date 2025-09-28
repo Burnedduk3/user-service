@@ -10,6 +10,7 @@ import (
 	"user-service/internal/application/dto"
 	"user-service/internal/domain/entities"
 	domainErrors "user-service/internal/domain/errors"
+	"user-service/pkg/logger"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"

@@ -44,65 +44,121 @@ func NewGormUserRepository(db *gorm.DB) ports.UserRepository {
 
 // Create implements ports.UserRepository
 func (r *GormUserRepository) Create(ctx context.Context, user *entities.User) (*entities.User, error) {
-	// TODO: Implement using TDD
-	// 1. Check if user with email already exists
-	// 2. Convert domain entity to GORM model
-	// 3. Create in database
-	// 4. Convert back to domain entity
-	panic("implement me")
+	// Check if user already exists
+	exists, err := r.ExistsByEmail(ctx, user.Email)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		return nil, domainErrors.ErrUserAlreadyExists
+	}
+
+	gormModel := r.toModel(user)
+
+	// Create user in database
+	if err := r.db.WithContext(ctx).Create(gormModel).Error; err != nil {
+		return nil, r.handleError(err)
+	}
+
+	return r.toEntity(gormModel), nil
 }
 
 // GetByID implements ports.UserRepository
 func (r *GormUserRepository) GetByID(ctx context.Context, id uint) (*entities.User, error) {
-	// TODO: Implement using TDD
-	// 1. Find user by ID in database
-	// 2. Handle not found case
-	// 3. Convert GORM model to domain entity
-	panic("implement me")
+	var model UserModel
+
+	err := r.db.WithContext(ctx).Where("id = ?", id).First(&model).Error
+	if err != nil {
+		return nil, r.handleError(err)
+	}
+
+	return r.toEntity(&model), nil
 }
 
 // GetByEmail implements ports.UserRepository
 func (r *GormUserRepository) GetByEmail(ctx context.Context, email string) (*entities.User, error) {
-	// TODO: Implement using TDD
-	// 1. Find user by email in database
-	// 2. Handle not found case
-	// 3. Convert GORM model to domain entity
-	panic("implement me")
+	var model UserModel
+
+	err := r.db.WithContext(ctx).Where("email = ?", email).First(&model).Error
+	if err != nil {
+		return nil, r.handleError(err)
+	}
+
+	return r.toEntity(&model), nil
 }
 
 // Update implements ports.UserRepository
 func (r *GormUserRepository) Update(ctx context.Context, user *entities.User) (*entities.User, error) {
-	// TODO: Implement using TDD
-	// 1. Find existing user
-	// 2. Update fields
-	// 3. Save to database
-	// 4. Return updated entity
-	panic("implement me")
+	// First check if user exists
+	var existingModel UserModel
+	err := r.db.WithContext(ctx).Where("id = ?", user.ID).First(&existingModel).Error
+	if err != nil {
+		return nil, r.handleError(err)
+	}
+
+	// Convert entity to model for update
+	updateModel := r.toModel(user)
+
+	// Update the user
+	err = r.db.WithContext(ctx).Model(&existingModel).Updates(updateModel).Error
+	if err != nil {
+		return nil, r.handleError(err)
+	}
+
+	// Fetch the updated user to return
+	var updatedModel UserModel
+	err = r.db.WithContext(ctx).Where("id = ?", user.ID).First(&updatedModel).Error
+	if err != nil {
+		return nil, r.handleError(err)
+	}
+
+	return r.toEntity(&updatedModel), nil
 }
 
 // Delete implements ports.UserRepository
 func (r *GormUserRepository) Delete(ctx context.Context, id uint) error {
-	// TODO: Implement using TDD
-	// 1. Find user by ID
-	// 2. Perform soft delete
-	// 3. Handle not found case
-	panic("implement me")
+	// First check if user exists
+	var model UserModel
+	err := r.db.WithContext(ctx).Where("id = ?", id).First(&model).Error
+	if err != nil {
+		return r.handleError(err)
+	}
+
+	// Perform soft delete
+	err = r.db.WithContext(ctx).Delete(&model).Error
+	if err != nil {
+		return r.handleError(err)
+	}
+
+	return nil
 }
 
 // ExistsByEmail implements ports.UserRepository
 func (r *GormUserRepository) ExistsByEmail(ctx context.Context, email string) (bool, error) {
-	// TODO: Implement using TDD
-	// 1. Count users with given email
-	// 2. Return true if count > 0
-	panic("implement me")
+	var count int64
+	err := r.db.WithContext(ctx).Model(&UserModel{}).Where("email = ?", email).Count(&count).Error
+	if err != nil {
+		return false, domainErrors.ErrFailedToCheckUserExistance
+	}
+
+	return count > 0, nil
 }
 
 // List implements ports.UserRepository
 func (r *GormUserRepository) List(ctx context.Context, limit, offset int) ([]*entities.User, error) {
-	// TODO: Implement using TDD
-	// 1. Query users with pagination
-	// 2. Convert to domain entities
-	panic("implement me")
+	var models []UserModel
+
+	err := r.db.WithContext(ctx).
+		Limit(limit).
+		Offset(offset).
+		Order("created_at DESC").
+		Find(&models).Error
+
+	if err != nil {
+		return nil, r.handleError(err)
+	}
+
+	return r.toEntities(models), nil
 }
 
 // Helper functions for conversion between domain entities and GORM models
@@ -136,11 +192,11 @@ func (r *GormUserRepository) toEntity(model *UserModel) *entities.User {
 }
 
 func (r *GormUserRepository) toEntities(models []UserModel) []*entities.User {
-	entities := make([]*entities.User, 0, len(models))
+	users := make([]*entities.User, 0, len(models))
 	for _, model := range models {
-		entities = append(entities, r.toEntity(&model))
+		users = append(users, r.toEntity(&model))
 	}
-	return entities
+	return users
 }
 
 // Helper to convert GORM errors to domain errors

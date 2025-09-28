@@ -29,7 +29,7 @@ type User struct {
 
 // Domain methods for business logic
 func (u *User) FullName() string {
-	return strings.TrimSpace(u.FirstName + " " + u.LastName)
+	return strings.TrimSpace(strings.TrimSpace(u.FirstName) + " " + strings.TrimSpace(u.LastName))
 }
 
 func (u *User) IsActive() bool {

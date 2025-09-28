@@ -49,6 +49,16 @@ var (
 		Code:    "USER_SUSPENDED",
 		Message: "User account is suspended",
 	}
+
+	ErrFailedToCheckUserExistance = &DomainError{
+		Code:    "FAILED_TO_CHECK_USER_EXISTENCE",
+		Message: "failed to check user existence",
+	}
+
+	ErrFailedToCreateUser = &DomainError{
+		Code:    "FAILED_TO_CREATE_USER",
+		Message: "failed to create user",
+	}
 )
 
 // Helper functions to create specific errors
