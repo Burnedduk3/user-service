@@ -480,7 +480,7 @@ func TestUserUseCases_ListUsers_Success(t *testing.T) {
 		},
 	}
 
-	mockRepo.On("List", ctx, 1, 10).Return(expectedUsers, nil)
+	mockRepo.On("List", ctx, 10, 0).Return(expectedUsers, nil)
 
 	// When
 	result, err := useCases.ListUsers(ctx, 0, 10)
@@ -490,7 +490,7 @@ func TestUserUseCases_ListUsers_Success(t *testing.T) {
 	require.NotNil(t, result)
 	assert.Len(t, result.Users, 2)
 	assert.Equal(t, 2, result.Total)
-	assert.Equal(t, 1, result.Page)
+	assert.Equal(t, 0, result.Page)
 	assert.Equal(t, 10, result.PageSize)
 
 	mockRepo.AssertExpectations(t)
@@ -502,7 +502,7 @@ func TestUserUseCases_ListUsers_InvalidPagination(t *testing.T) {
 	ctx := context.Background()
 
 	// Mock for corrected pagination parameters
-	mockRepo.On("List", ctx, 1, 10).Return([]*entities.User{}, nil)
+	mockRepo.On("List", ctx, 10, 0).Return([]*entities.User{}, nil)
 
 	// When - Pass invalid pagination parameters
 	result, err := useCases.ListUsers(ctx, -1, 150) // Invalid page and page_size
@@ -510,7 +510,7 @@ func TestUserUseCases_ListUsers_InvalidPagination(t *testing.T) {
 	// Then
 	require.NoError(t, err)
 	require.NotNil(t, result)
-	assert.Equal(t, 1, result.Page)      // Should default to 1
+	assert.Equal(t, 0, result.Page)      // Should default to 1
 	assert.Equal(t, 10, result.PageSize) // Should default to 10
 
 	mockRepo.AssertExpectations(t)
@@ -531,15 +531,15 @@ func TestUserUseCases_ListUsers_SecondPage(t *testing.T) {
 	}
 
 	// For page 2 with page_size 5, offset should be 5
-	mockRepo.On("List", ctx, 2, 5).Return(expectedUsers, nil)
+	mockRepo.On("List", ctx, 5, 1).Return(expectedUsers, nil)
 
 	// When
-	result, err := useCases.ListUsers(ctx, 2, 5)
+	result, err := useCases.ListUsers(ctx, 1, 5)
 
 	// Then
 	require.NoError(t, err)
 	require.NotNil(t, result)
-	assert.Equal(t, 2, result.Page)
+	assert.Equal(t, 1, result.Page)
 	assert.Equal(t, 5, result.PageSize)
 	assert.Len(t, result.Users, 1)
 
@@ -551,7 +551,7 @@ func TestUserUseCases_ListUsers_RepositoryError(t *testing.T) {
 	useCases, mockRepo := setupTestUseCases()
 	ctx := context.Background()
 
-	mockRepo.On("List", ctx, 1, 10).Return(nil, domainErrors.ErrFailedToListUsers)
+	mockRepo.On("List", ctx, 10, 1).Return(nil, domainErrors.ErrFailedToListUsers)
 
 	// When
 	result, err := useCases.ListUsers(ctx, 1, 10)
@@ -569,7 +569,7 @@ func TestUserUseCases_ListUsers_EmptyResult(t *testing.T) {
 	useCases, mockRepo := setupTestUseCases()
 	ctx := context.Background()
 
-	mockRepo.On("List", ctx, 1, 10).Return([]*entities.User{}, nil)
+	mockRepo.On("List", ctx, 10, 1).Return([]*entities.User{}, nil)
 
 	// When
 	result, err := useCases.ListUsers(ctx, 1, 10)

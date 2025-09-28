@@ -131,15 +131,15 @@ func (uc *userUseCasesImpl) UpdateUser(ctx context.Context, id uint, request *dt
 func (uc *userUseCasesImpl) ListUsers(ctx context.Context, page, pageSize int) (*dto.UserListResponseDTO, error) {
 	uc.logger.Info("ListUsers use case called", "page", page, "page_size", pageSize)
 
-	if page < 1 {
-		page = 1
+	if page < 0 {
+		page = 0
 	}
 
 	if pageSize < 1 || pageSize > 100 {
 		pageSize = 10
 	}
 
-	users, err := uc.userRepo.List(ctx, page, pageSize)
+	users, err := uc.userRepo.List(ctx, pageSize, page)
 
 	if err != nil {
 		return nil, err

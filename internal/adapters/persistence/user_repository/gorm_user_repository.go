@@ -148,10 +148,9 @@ func (r *GormUserRepository) ExistsByEmail(ctx context.Context, email string) (b
 func (r *GormUserRepository) List(ctx context.Context, limit, offset int) ([]*entities.User, error) {
 	var models []UserModel
 
-	err := r.db.WithContext(ctx).
+	err := r.db.Model(&UserModel{}).
 		Limit(limit).
 		Offset(offset).
-		Order("created_at DESC").
 		Find(&models).Error
 
 	if err != nil {

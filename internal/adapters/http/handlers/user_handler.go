@@ -240,7 +240,7 @@ func (h *UserHandler) ListUsers(c echo.Context) error {
 	pageSize := 10
 
 	if pageParam := c.QueryParam("page"); pageParam != "" {
-		if p, err := strconv.Atoi(pageParam); err == nil && p > 0 {
+		if p, err := strconv.Atoi(pageParam); err == nil && p >= 0 {
 			page = p
 		}
 	}
