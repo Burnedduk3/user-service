@@ -1,9 +1,9 @@
-FROM alpine:3.22
+FROM ubuntu:25.04
 
 RUN mkdir -p /etc/user-service
 COPY configs/config-docker.yaml /etc/user-service/config.yaml
 
-RUN adduser -u 2000 -S user-service && \
+RUN adduser --system --uid 2000 --no-create-home user-service && \
     chown -R user-service /etc/user-service
 
 USER user-service

@@ -19,7 +19,7 @@ type Server struct {
 	echo        *echo.Echo
 	config      *config.Config
 	logger      logger.Logger
-	connections *infrastructure.DatabaseConnections // Add this
+	connections *infrastructure.DatabaseConnections
 }
 
 func NewServer(cfg *config.Config, log logger.Logger, connections *infrastructure.DatabaseConnections) (*Server, error) {
@@ -33,7 +33,7 @@ func NewServer(cfg *config.Config, log logger.Logger, connections *infrastructur
 		echo:        e,
 		config:      cfg,
 		logger:      log,
-		connections: connections, // Add this
+		connections: connections,
 	}
 
 	// Setup middleware
